@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetroWeather Pro | Detailed Forecast</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* --- CSS STYLES --- */
+
+        /* Variables and Global Reset */
+        :root {
+            --color-bg-dark: #0f172a;
+            --color-bg-card: rgba(30, 41, 59, 0.85);
+            --color-text-light: #f8fafc;
+            --color-text-muted: #94a3b8;
+            --color-primary-blue: #3b82f6;
+            --color-accent-green: #10b981;
+            --color-accent-yellow: #f59e0b;
+            --color-accent-red: #ef4444;
+            --color-accent-purple: #8b5cf6;
+            --color-accent-cyan: #06b6d4;
+            --color-accent-pink: #ec4899;
+            --color-accent-orange: #f97316;
+            --color-sidebar-active: rgba(30, 41, 59, 0.95);
+            --color-border: rgba(100, 116, 139, 0.4);
+            --border-radius-card: 16px;
+            --sidebar-width: 250px;
+            --blur-amount: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            line-height: 1.6;
+            background-image: url('https://images.unsplash.com/photo-1501630834273-4b5604d2ee31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Background overlay for better readability */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.7) 100%);
+            z-index: -1;
+        }
+
+        /* --- Layout Container --- */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--color-bg-card);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            position: fixed;
+            height: 100%;
+            z-index: 10;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 30px;
+            color: var(--color-primary-blue);
+        }
+
+        .logo i {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .logo h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+            color: var(--color-text-muted);
+            transition: all 0.3s ease;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .sidebar-nav li i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-nav li:hover {
+            color: var(--color-text-light);
+            background-color: rgba(30, 41, 59, 0.6);
+        }
+
+        .sidebar-nav li.active {
+            background-color: var(--color-sidebar-active);
+            color: var(--color-text-light);
+            border-left: 4px solid var(--color-primary-blue);
+            padding-left: 16px;
+        }
+        
+        /* Upgrade Card */
+        .upgrade-card {
+            margin: auto 20px 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border-radius: var(--border-radius-card);
+            text-align: center;
+            color: var(--color-text-light);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--color-border);
+        }
+
+        .upgrade-card i {
+            font-size: 30px;
+            color: var(--color-accent-yellow);
+            margin-bottom: 10px;
+        }
+
+        .upgrade-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-card p {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-bottom: 15px;
+        }
+
+        .upgrade-card button {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .upgrade-card button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            margin-left: var(--sidebar-width);
+        }
+
+        /* --- Header/Navbar --- */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .main-header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        .location-selector {
+            display: flex;
+            align-items: center;
+            background-color: var(--color-bg-card);
+            border-radius: 8px;
+            padding: 5px 15px;
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--color-border);
+        }
+
+        .location-selector i {
+            color: var(--color-primary-blue);
+            margin-right: 8px;
+        }
+
+        .location-selector select {
+            background: transparent;
+            border: none;
+            color: var(--color-text-light);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .location-selector select:focus {
+            outline: none;
+        }
+
+        .search-profile {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .search-box input {
+            background-color: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            padding: 8px 15px 8px 40px;
+            border-radius: 8px;
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+            width: 250px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+        }
+
+        .search-box input::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--color-primary-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+        }
+
+        .profile i {
+            font-size: 1.3rem;
+            color: var(--color-text-muted);
+            margin-right: 20px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .profile i:hover {
+            color: var(--color-primary-blue);
+        }
+
+        .profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--color-primary-blue);
+        }
+
+        /* --- General Card Styling --- */
+        .card {
+            background-color: var(--color-bg-card);
+            border-radius: var(--border-radius-card);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--color-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* NEW STYLES FOR ENHANCED FORECAST PAGE */
+
+        /* Forecast Dashboard Controls */
+        .forecast-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            border-color: transparent;
+        }
+
+        /* Quick Forecast Overview */
+        .quick-forecast {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quick-forecast-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .quick-forecast-item:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+        }
+
+        .quick-forecast-item i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--color-primary-blue);
+        }
+
+        .quick-forecast-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .quick-forecast-label {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Enhanced Forecast Period Selector */
+        .forecast-period-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background-color: var(--color-bg-card);
+            padding: 15px;
+            border-radius: var(--border-radius-card);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            flex-wrap: wrap;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn.active {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .period-btn:hover:not(.active) {
+            background-color: rgba(30, 41, 59, 0.5);
+            color: var(--color-text-light);
+        }
+
+        /* Hourly Forecast Section */
+        .hourly-forecast-section {
+            margin-bottom: 30px;
+        }
+
+        .hourly-forecast-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 15px 0;
+            gap: 15px;
+        }
+
+        .hour-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+            padding: 15px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .hour-item:hover {
+            background-color: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+        }
+
+        .hour-time {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .hour-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: var(--color-primary-blue);
+        }
+
+        .hour-temp {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .hour-precip {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--color-primary-blue);
+        }
+
+        .hour-precip i {
+            margin-right: 5px;
+        }
+
+        .hour-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 8px;
+            gap: 3px;
+        }
+
+        .hour-detail {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .hour-detail i {
+            margin-right: 5px;
+            font-size: 0.7rem;
+        }
+
+        /* Extended Forecast Section */
+        .extended-forecast-section {
+            margin-bottom: 30px;
+        }
+
+        .daily-forecast-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .day-card {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .day-card:hover {
+            background-color: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .day-name {
+            font-weight: 600;
+        }
+
+        .day-date {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        .day-conditions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .day-icon {
+            font-size: 2rem;
+            color: var(--color-primary-blue);
+        }
+
+        .day-temps {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .day-high {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .day-low {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+        }
+
+        .day-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .day-detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            background-color: rgba(30, 41, 59, 0.3);
+            border-radius: 8px;
+        }
+
+        .day-detail-label {
+            font-size: 0.7rem;
+            color: var(--color-text-muted);
+            margin-bottom: 3px;
+        }
+
+        .day-detail-value {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Enhanced Charts Section */
+        .forecast-charts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Sunrise/Sunset Section */
+        .sun-times-section {
+            margin-bottom: 30px;
+        }
+
+        .sun-times-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .sun-time-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .sun-time-card.sunrise {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%);
+        }
+
+        .sun-time-card.sunset {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+        }
+
+        .sun-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .sunrise .sun-icon {
+            color: var(--color-accent-yellow);
+        }
+
+        .sunset .sun-icon {
+            color: var(--color-accent-purple);
+        }
+
+        .sun-time-label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: var(--color-text-muted);
+        }
+
+        .sun-time-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .daylight-duration {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-top: 5px;
+        }
+
+        /* Detailed Metrics Section */
+        .detailed-metrics-section {
+            margin-bottom: 30px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            background-color: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--color-primary-blue);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .metric-trend {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .metric-trend.positive {
+            color: var(--color-accent-green);
+        }
+
+        .metric-trend.negative {
+            color: var(--color-accent-red);
+        }
+
+        /* Weather Alerts */
+        .weather-alerts {
+            margin-bottom: 30px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--color-accent-red);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .alert-item:hover {
+            background-color: rgba(239, 68, 68, 0.3);
+            transform: translateX(5px);
+        }
+
+        .alert-item i {
+            color: var(--color-accent-red);
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .alert-content h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .alert-content p {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            border-color: transparent;
+        }
+
+        /* Moon Phase Section */
+        .moon-phase-section {
+            margin-bottom: 30px;
+        }
+
+        .moon-phase-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+        }
+
+        .moon-visual {
+            font-size: 4rem;
+            color: var(--color-accent-yellow);
+        }
+
+        .moon-details {
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .moon-phase-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .moon-phase-desc {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+        }
+
+        .moon-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .moon-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .moon-stat-label {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        .moon-stat-value {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Forecast Insights Section */
+        .forecast-insights {
+            margin-bottom: 30px;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .insight-card {
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: var(--border-radius-card);
+            transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .insight-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: var(--color-primary-blue);
+        }
+
+        .insight-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .insight-content {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        /* Forecast Comparison Section */
+        .forecast-comparison {
+            margin-bottom: 30px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .comparison-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: var(--border-radius-card);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+        }
+
+        .comparison-period {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+        }
+
+        .comparison-temp {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .comparison-condition {
+            font-size: 0.9rem;
+            color: var(--color-primary-blue);
+            margin-bottom: 10px;
+        }
+
+        .comparison-details {
+            display: flex;
+            gap: 15px;
+        }
+
+        .comparison-detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .comparison-detail-label {
+            font-size: 0.7rem;
+            color: var(--color-text-muted);
+        }
+
+        .comparison-detail-value {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .daily-forecast-container {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+            
+            .forecast-charts {
+                grid-template-columns: 1fr;
+            }
+            
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .logo h2, .sidebar-nav li span, .upgrade-card {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .sun-times-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .search-profile {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .moon-phase-container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .moon-details {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-cloud-sun"></i>
+                <h2>MetroWeather</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><i class="fas fa-th-large"></i> Dashboard</li>
+                    <li><i class="fas fa-map-marked-alt"></i> Weather Maps</li>
+                    <li class="active"><i class="fas fa-calendar-alt"></i> Forecast</li>
+                    <li><i class="fas fa-chart-line"></i> Analytics</li>
+                    <li><i class="fas fa-history"></i> Historical Data</li>
+                    <li><i class="fas fa-bell"></i> Alerts</li>
+                    <li><i class="fas fa-cog"></i> Settings</li>
+                </ul>
+            </nav>
+            <div class="upgrade-card">
+                <i class="fas fa-crown"></i>
+                <h3>Upgrade to Pro</h3>
+                <p>Advanced features & no ads</p>
+                <button>Go Pro</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div>
+                    <h1>Detailed Weather Forecast</h1>
+                    <div class="location-selector">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <select id="location-select">
+                            <option value="new-york">New York, NY</option>
+                            <option value="london">London, UK</option>
+                            <option value="tokyo">Tokyo, Japan</option>
+                            <option value="sydney">Sydney, Australia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="search-profile">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search location...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="profile">
+                        <i class="fas fa-bell"></i>
+                        <i class="fas fa-cog"></i>
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" alt="Profile">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Forecast Dashboard Controls -->
+            <div class="forecast-controls">
+                <button class="control-btn active" data-view="detailed">
+                    <i class="fas fa-chart-bar"></i>
+                    Detailed Forecast
+                </button>
+                <button class="control-btn" data-view="hourly">
+                    <i class="fas fa-clock"></i>
+                    Hourly View
+                </button>
+                <button class="control-btn" data-view="extended">
+                    <i class="fas fa-calendar-week"></i>
+                    Extended Forecast
+                </button>
+                <button class="control-btn" data-view="charts">
+                    <i class="fas fa-chart-line"></i>
+                    Forecast Charts
+                </button>
+                <button class="control-btn" data-view="insights">
+                    <i class="fas fa-lightbulb"></i>
+                    Weather Insights
+                </button>
+            </div>
+
+            <!-- Quick Forecast Overview -->
+            <section class="quick-forecast">
+                <div class="quick-forecast-item">
+                    <i class="fas fa-temperature-high"></i>
+                    <div class="quick-forecast-value">72°F</div>
+                    <div class="quick-forecast-label">Current Temp</div>
+                </div>
+                <div class="quick-forecast-item">
+                    <i class="fas fa-tint"></i>
+                    <div class="quick-forecast-value">65%</div>
+                    <div class="quick-forecast-label">Humidity</div>
+                </div>
+                <div class="quick-forecast-item">
+                    <i class="fas fa-wind"></i>
+                    <div class="quick-forecast-value">8 mph</div>
+                    <div class="quick-forecast-label">Wind Speed</div>
+                </div>
+                <div class="quick-forecast-item">
+                    <i class="fas fa-sun"></i>
+                    <div class="quick-forecast-value">5</div>
+                    <div class="quick-forecast-label">UV Index</div>
+                </div>
+                <div class="quick-forecast-item">
+                    <i class="fas fa-cloud-rain"></i>
+                    <div class="quick-forecast-value">20%</div>
+                    <div class="quick-forecast-label">Precip Chance</div>
+                </div>
+                <div class="quick-forecast-item">
+                    <i class="fas fa-eye"></i>
+                    <div class="quick-forecast-value">10 mi</div>
+                    <div class="quick-forecast-label">Visibility</div>
+                </div>
+            </section>
+
+            <!-- Forecast Period Selector -->
+            <div class="forecast-period-selector card">
+                <button class="period-btn active" data-period="24h">24 Hours</button>
+                <button class="period-btn" data-period="48h">48 Hours</button>
+                <button class="period-btn" data-period="7d">7 Days</button>
+                <button class="period-btn" data-period="10d">10 Days</button>
+                <button class="period-btn" data-period="14d">14 Days</button>
+            </div>
+
+            <!-- Weather Alerts -->
+            <section class="weather-alerts card">
+                <h2>Weather Alerts & Notifications</h2>
+                <div class="alert-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="alert-content">
+                        <h3>Heat Advisory</h3>
+                        <p>High temperatures expected through Friday. Stay hydrated and avoid prolonged sun exposure.</p>
+                    </div>
+                </div>
+                <div class="alert-item" style="background-color: rgba(245, 158, 11, 0.2); border-left-color: var(--color-accent-yellow);">
+                    <i class="fas fa-wind" style="color: var(--color-accent-yellow);"></i>
+                    <div class="alert-content">
+                        <h3>Wind Advisory</h3>
+                        <p>Strong winds expected tomorrow with gusts up to 35 mph. Secure outdoor objects.</p>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn">
+                        <i class="fas fa-bell"></i>
+                        Set Alert
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-share-alt"></i>
+                        Share Forecast
+                    </button>
+                    <button class="action-btn primary">
+                        <i class="fas fa-download"></i>
+                        Export Data
+                    </button>
+                </div>
+            </section>
+
+            <!-- Hourly Forecast Section -->
+            <section class="hourly-forecast-section card">
+                <h2>24-Hour Detailed Forecast</h2>
+                <div class="hourly-forecast-container" id="hourly-forecast">
+                    <!-- Hours will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Extended Forecast Section -->
+            <section class="extended-forecast-section card">
+                <h2>10-Day Extended Forecast</h2>
+                <div class="daily-forecast-container" id="daily-forecast">
+                    <!-- Days will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Forecast Comparison Section -->
+            <section class="forecast-comparison card">
+                <h2>Forecast Comparison</h2>
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <div class="comparison-period">Today</div>
+                        <div class="comparison-temp">72°F</div>
+                        <div class="comparison-condition">Partly Cloudy</div>
+                        <div class="comparison-details">
+                            <div class="comparison-detail">
+                                <div class="comparison-detail-label">Humidity</div>
+                                <div class="comparison-detail-value">65%</div>
+                            </div>
+                            <div class="comparison-detail">
+                                <div class="comparison-detail-label">Wind</div>
+                                <div class="comparison-detail-value">8 mph</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comparison-card">
+                        <div class="comparison-period">Tomorrow</div>
+                        <div class="comparison-temp">76°F</div>
+                        <div class="comparison-condition">Mostly Sunny</div>
+                        <div class="comparison-details">
+                            <div class="comparison-detail">
+                                <div class="comparison-detail-label">Humidity</div>
+                                <div class="comparison-detail-value">60%</div>
+                            </div>
+                            <div class="comparison-detail">
+                                <div class="comparison-detail-label">Wind</div>
+                                <div class="comparison-detail-value">7 mph</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comparison-card">
+                        <div class="comparison-period">Weekend</div>
+                        <div class="comparison-temp">82°F</div>
+                        <div class="comparison-condition">Sunny</div>
+                        <div class="comparison-details">
+                            <div class="comparison-detail">
+                                <div class="comparison-detail-label">Humidity</div>
+                                <div class="comparison-detail-value">58%</div>
+                            </div>
+                            <div class="comparison-detail">
+                                <div class="comparison-detail-label">Wind</div>
+                                <div class="comparison-detail-value">6 mph</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Forecast Charts Section -->
+            <section class="forecast-charts card">
+                <h2>Forecast Charts & Trends</h2>
+                <div class="forecast-charts">
+                    <div class="card chart-card">
+                        <h3>Temperature & Precipitation <span class="chart-actions">Next 7 Days</span></h3>
+                        <div class="chart-container">
+                            <canvas id="tempPrecipChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3>Wind & Pressure <span class="chart-actions">Next 5 Days</span></h3>
+                        <div class="chart-container">
+                            <canvas id="windPressureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" data-chart="temperature">
+                        <i class="fas fa-thermometer-half"></i>
+                        Temperature
+                    </button>
+                    <button class="action-btn" data-chart="precipitation">
+                        <i class="fas fa-tint"></i>
+                        Precipitation
+                    </button>
+                    <button class="action-btn" data-chart="wind">
+                        <i class="fas fa-wind"></i>
+                        Wind
+                    </button>
+                    <button class="action-btn active" data-chart="all">
+                        <i class="fas fa-chart-line"></i>
+                        All Data
+                    </button>
+                </div>
+            </section>
+
+            <!-- Forecast Insights Section -->
+            <section class="forecast-insights card">
+                <h2>Weather Insights & Recommendations</h2>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <i class="fas fa-umbrella insight-icon"></i>
+                            <div class="insight-title">Rain Preparedness</div>
+                        </div>
+                        <div class="insight-content">
+                            Light rain expected this evening. Consider carrying an umbrella if you'll be out after 6 PM. Precipitation chance increases to 30% by 8 PM.
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <i class="fas fa-sun insight-icon"></i>
+                            <div class="insight-title">UV Protection</div>
+                        </div>
+                        <div class="insight-content">
+                            UV index peaks at 8 this weekend. Sunscreen recommended if spending more than 30 minutes outdoors between 10 AM and 4 PM.
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <i class="fas fa-wind insight-icon"></i>
+                            <div class="insight-title">Wind Conditions</div>
+                        </div>
+                        <div class="insight-content">
+                            Light winds expected throughout the week. Ideal conditions for outdoor activities. Wind advisory in effect for Wednesday with gusts up to 35 mph.
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <i class="fas fa-tree insight-icon"></i>
+                            <div class="insight-title">Allergy Alert</div>
+                        </div>
+                        <div class="insight-content">
+                            Tree pollen levels are high today. Allergy sufferers may want to limit outdoor exposure. Grass pollen expected to increase over the weekend.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Moon Phase Section -->
+            <section class="moon-phase-section card">
+                <h2>Moon Phase & Astronomy</h2>
+                <div class="moon-phase-container">
+                    <div class="moon-visual">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="moon-details">
+                        <div class="moon-phase-name">Waxing Crescent</div>
+                        <div class="moon-phase-desc">The moon is currently in its waxing crescent phase, visible in the western sky after sunset.</div>
+                        <div class="moon-stats">
+                            <div class="moon-stat">
+                                <div class="moon-stat-label">Illumination</div>
+                                <div class="moon-stat-value">28%</div>
+                            </div>
+                            <div class="moon-stat">
+                                <div class="moon-stat-label">Next Full Moon</div>
+                                <div class="moon-stat-value">Oct 28</div>
+                            </div>
+                            <div class="moon-stat">
+                                <div class="moon-stat-label">Moonrise</div>
+                                <div class="moon-stat-value">10:24 AM</div>
+                            </div>
+                            <div class="moon-stat">
+                                <div class="moon-stat-label">Moonset</div>
+                                <div class="moon-stat-value">8:47 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sunrise/Sunset Section -->
+            <section class="sun-times-section card">
+                <h2>Sunrise & Sunset Times</h2>
+                <div class="sun-times-container">
+                    <div class="sun-time-card sunrise">
+                        <i class="fas fa-sun sun-icon"></i>
+                        <div class="sun-time-label">Sunrise</div>
+                        <div class="sun-time-value">6:24 AM</div>
+                        <div class="daylight-duration">Daylight: 14h 36m</div>
+                    </div>
+                    <div class="sun-time-card sunset">
+                        <i class="fas fa-moon sun-icon"></i>
+                        <div class="sun-time-label">Sunset</div>
+                        <div class="sun-time-value">8:00 PM</div>
+                        <div class="daylight-duration">Tomorrow: 14h 34m</div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" data-action="golden-hour">
+                        <i class="fas fa-camera"></i>
+                        Golden Hour: 5:45-6:24 AM
+                    </button>
+                    <button class="action-btn" data-action="blue-hour">
+                        <i class="fas fa-cloud"></i>
+                        Blue Hour: 7:30-8:00 PM
+                    </button>
+                </div>
+            </section>
+
+            <!-- Detailed Metrics Section -->
+            <section class="detailed-metrics-section card">
+                <h2>Detailed Weather Metrics</h2>
+                <div class="metrics-grid" id="detailed-metrics">
+                    <!-- Metrics will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Action Buttons Section -->
+            <section class="card">
+                <h2 style="margin-bottom: 20px;">Quick Actions</h2>
+                <div class="action-buttons">
+                    <button class="action-btn">
+                        <i class="fas fa-bell"></i>
+                        Set Custom Alerts
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-share-alt"></i>
+                        Share Forecast
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-download"></i>
+                        Export Data
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-history"></i>
+                        Compare to History
+                    </button>
+                    <button class="action-btn primary">
+                        <i class="fas fa-sync"></i>
+                        Refresh Forecast
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Enhanced Forecast Data
+        const forecastData = {
+            location: "New York, NY",
+            current: {
+                temp: 72,
+                condition: "Partly Cloudy",
+                feelsLike: 75,
+                humidity: 65,
+                wind: 8,
+                pressure: 1013,
+                uvIndex: 5,
+                visibility: 10,
+                dewPoint: 60,
+                cloudCover: 45
+            },
+            hourly: [
+                { time: "Now", temp: 72, feelsLike: 75, icon: "fa-cloud-sun", precipProb: 10, humidity: 65, wind: 8, uv: 5, pressure: 1013 },
+                { time: "1 PM", temp: 74, feelsLike: 76, icon: "fa-sun", precipProb: 5, humidity: 62, wind: 7, uv: 6, pressure: 1012 },
+                { time: "2 PM", temp: 76, feelsLike: 78, icon: "fa-sun", precipProb: 5, humidity: 60, wind: 8, uv: 7, pressure: 1012 },
+                { time: "3 PM", temp: 78, feelsLike: 80, icon: "fa-sun", precipProb: 5, humidity: 58, wind: 9, uv: 8, pressure: 1011 },
+                { time: "4 PM", temp: 77, feelsLike: 79, icon: "fa-cloud-sun", precipProb: 10, humidity: 59, wind: 8, uv: 6, pressure: 1011 },
+                { time: "5 PM", temp: 75, feelsLike: 77, icon: "fa-cloud", precipProb: 15, humidity: 62, wind: 7, uv: 4, pressure: 1012 },
+                { time: "6 PM", temp: 73, feelsLike: 75, icon: "fa-cloud", precipProb: 20, humidity: 65, wind: 6, uv: 2, pressure: 1012 },
+                { time: "7 PM", temp: 70, feelsLike: 72, icon: "fa-cloud", precipProb: 25, humidity: 68, wind: 5, uv: 1, pressure: 1013 },
+                { time: "8 PM", temp: 68, feelsLike: 69, icon: "fa-cloud", precipProb: 30, humidity: 72, wind: 4, uv: 0, pressure: 1013 },
+                { time: "9 PM", temp: 67, feelsLike: 67, icon: "fa-cloud", precipProb: 30, humidity: 75, wind: 4, uv: 0, pressure: 1014 },
+                { time: "10 PM", temp: 66, feelsLike: 66, icon: "fa-cloud", precipProb: 25, humidity: 77, wind: 3, uv: 0, pressure: 1014 },
+                { time: "11 PM", temp: 65, feelsLike: 65, icon: "fa-cloud", precipProb: 20, humidity: 78, wind: 3, uv: 0, pressure: 1014 },
+                { time: "12 AM", temp: 64, feelsLike: 64, icon: "fa-cloud", precipProb: 15, humidity: 79, wind: 3, uv: 0, pressure: 1015 },
+                { time: "1 AM", temp: 63, feelsLike: 63, icon: "fa-cloud", precipProb: 10, humidity: 80, wind: 3, uv: 0, pressure: 1015 },
+                { time: "2 AM", temp: 62, feelsLike: 62, icon: "fa-cloud", precipProb: 10, humidity: 81, wind: 3, uv: 0, pressure: 1015 },
+                { time: "3 AM", temp: 61, feelsLike: 61, icon: "fa-cloud", precipProb: 5, humidity: 82, wind: 3, uv: 0, pressure: 1016 },
+                { time: "4 AM", temp: 60, feelsLike: 60, icon: "fa-cloud", precipProb: 5, humidity: 83, wind: 3, uv: 0, pressure: 1016 },
+                { time: "5 AM", temp: 59, feelsLike: 59, icon: "fa-cloud", precipProb: 5, humidity: 84, wind: 3, uv: 0, pressure: 1016 },
+                { time: "6 AM", temp: 60, feelsLike: 60, icon: "fa-cloud-sun", precipProb: 5, humidity: 82, wind: 4, uv: 0, pressure: 1017 },
+                { time: "7 AM", temp: 62, feelsLike: 62, icon: "fa-cloud-sun", precipProb: 5, humidity: 78, wind: 4, uv: 1, pressure: 1017 },
+                { time: "8 AM", temp: 65, feelsLike: 65, icon: "fa-cloud-sun", precipProb: 5, humidity: 74, wind: 5, uv: 2, pressure: 1017 },
+                { time: "9 AM", temp: 68, feelsLike: 69, icon: "fa-cloud-sun", precipProb: 5, humidity: 70, wind: 6, uv: 4, pressure: 1016 },
+                { time: "10 AM", temp: 70, feelsLike: 72, icon: "fa-sun", precipProb: 5, humidity: 67, wind: 7, uv: 5, pressure: 1016 },
+                { time: "11 AM", temp: 72, feelsLike: 74, icon: "fa-sun", precipProb: 5, humidity: 64, wind: 7, uv: 6, pressure: 1016 }
+            ],
+            daily: [
+                { day: "Today", date: "Oct 12", high: 78, low: 65, icon: "fa-cloud-sun", precipProb: 20, humidity: 65, wind: 8, uv: 5, sunrise: "6:24 AM", sunset: "8:00 PM", moonPhase: "Waxing Crescent" },
+                { day: "Friday", date: "Oct 13", high: 80, low: 66, icon: "fa-sun", precipProb: 10, humidity: 62, wind: 7, uv: 6, sunrise: "6:25 AM", sunset: "7:58 PM", moonPhase: "Waxing Crescent" },
+                { day: "Saturday", date: "Oct 14", high: 82, low: 68, icon: "fa-sun", precipProb: 5, humidity: 58, wind: 6, uv: 7, sunrise: "6:26 AM", sunset: "7:57 PM", moonPhase: "First Quarter" },
+                { day: "Sunday", date: "Oct 15", high: 85, low: 70, icon: "fa-sun", precipProb: 5, humidity: 55, wind: 5, uv: 8, sunrise: "6:27 AM", sunset: "7:55 PM", moonPhase: "Waxing Gibbous" },
+                { day: "Monday", date: "Oct 16", high: 83, low: 69, icon: "fa-cloud-sun", precipProb: 15, humidity: 60, wind: 7, uv: 6, sunrise: "6:28 AM", sunset: "7:54 PM", moonPhase: "Waxing Gibbous" },
+                { day: "Tuesday", date: "Oct 17", high: 79, low: 67, icon: "fa-cloud", precipProb: 30, humidity: 68, wind: 9, uv: 4, sunrise: "6:29 AM", sunset: "7:52 PM", moonPhase: "Waxing Gibbous" },
+                { day: "Wednesday", date: "Oct 18", high: 77, low: 66, icon: "fa-cloud-rain", precipProb: 60, humidity: 75, wind: 10, uv: 3, sunrise: "6:30 AM", sunset: "7:51 PM", moonPhase: "Full Moon" },
+                { day: "Thursday", date: "Oct 19", high: 75, low: 64, icon: "fa-cloud-rain", precipProb: 40, humidity: 72, wind: 8, uv: 4, sunrise: "6:31 AM", sunset: "7:49 PM", moonPhase: "Waning Gibbous" },
+                { day: "Friday", date: "Oct 20", high: 76, low: 63, icon: "fa-cloud-sun", precipProb: 20, humidity: 65, wind: 7, uv: 5, sunrise: "6:32 AM", sunset: "7:48 PM", moonPhase: "Waning Gibbous" },
+                { day: "Saturday", date: "Oct 21", high: 78, low: 65, icon: "fa-sun", precipProb: 10, humidity: 60, wind: 6, uv: 6, sunrise: "6:33 AM", sunset: "7:46 PM", moonPhase: "Last Quarter" }
+            ],
+            detailedMetrics: [
+                { label: "Feels Like", value: "75°F", icon: "fa-temperature-high", trend: "positive" },
+                { label: "Dew Point", value: "60°F", icon: "fa-tint", trend: "stable" },
+                { label: "Pressure", value: "1013 hPa", icon: "fa-tachometer-alt", trend: "stable" },
+                { label: "Visibility", value: "10 mi", icon: "fa-eye", trend: "positive" },
+                { label: "Cloud Cover", value: "45%", icon: "fa-cloud", trend: "negative" },
+                { label: "Ozone", value: "320 DU", icon: "fa-wind", trend: "positive" },
+                { label: "Moon Phase", value: "Waxing", icon: "fa-moon", trend: "stable" },
+                { label: "Pollen Count", value: "Moderate", icon: "fa-leaf", trend: "negative" },
+                { label: "Air Quality", value: "Good", icon: "fa-wind", trend: "positive" },
+                { label: "Humidity", value: "65%", icon: "fa-tint", trend: "stable" },
+                { label: "UV Index", value: "5", icon: "fa-sun", trend: "moderate" },
+                { label: "Wind Gust", value: "12 mph", icon: "fa-wind", trend: "positive" }
+            ],
+            alerts: [
+                { type: "warning", title: "Heat Advisory", message: "High temperatures expected through Friday", icon: "fa-exclamation-triangle" },
+                { type: "info", title: "Wind Advisory", message: "Strong winds expected tomorrow", icon: "fa-wind" }
+            ]
+        };
+
+        // Initialize the forecast page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate hourly forecast
+            const hourlyContainer = document.getElementById('hourly-forecast');
+            forecastData.hourly.forEach(hour => {
+                const hourElement = document.createElement('div');
+                hourElement.className = 'hour-item';
+                hourElement.innerHTML = `
+                    <div class="hour-time">${hour.time}</div>
+                    <i class="fas ${hour.icon} hour-icon"></i>
+                    <div class="hour-temp">${hour.temp}°</div>
+                    <div class="hour-precip">
+                        <i class="fas fa-tint"></i> ${hour.precipProb}%
+                    </div>
+                    <div class="hour-details">
+                        <div class="hour-detail">
+                            <i class="fas fa-temperature-low"></i> ${hour.feelsLike}°
+                        </div>
+                        <div class="hour-detail">
+                            <i class="fas fa-wind"></i> ${hour.wind} mph
+                        </div>
+                        <div class="hour-detail">
+                            <i class="fas fa-sun"></i> ${hour.uv}
+                        </div>
+                    </div>
+                `;
+                hourlyContainer.appendChild(hourElement);
+            });
+
+            // Populate daily forecast
+            const dailyContainer = document.getElementById('daily-forecast');
+            forecastData.daily.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'day-card';
+                dayElement.innerHTML = `
+                    <div class="day-header">
+                        <div class="day-name">${day.day}</div>
+                        <div class="day-date">${day.date}</div>
+                    </div>
+                    <div class="day-conditions">
+                        <i class="fas ${day.icon} day-icon"></i>
+                        <div class="day-temps">
+                            <div class="day-high">${day.high}°</div>
+                            <div class="day-low">${day.low}°</div>
+                        </div>
+                    </div>
+                    <div class="day-details">
+                        <div class="day-detail">
+                            <div class="day-detail-label">Precip</div>
+                            <div class="day-detail-value">${day.precipProb}%</div>
+                        </div>
+                        <div class="day-detail">
+                            <div class="day-detail-label">Humidity</div>
+                            <div class="day-detail-value">${day.humidity}%</div>
+                        </div>
+                        <div class="day-detail">
+                            <div class="day-detail-label">Wind</div>
+                            <div class="day-detail-value">${day.wind} mph</div>
+                        </div>
+                        <div class="day-detail">
+                            <div class="day-detail-label">UV Index</div>
+                            <div class="day-detail-value">${day.uv}</div>
+                        </div>
+                    </div>
+                `;
+                dailyContainer.appendChild(dayElement);
+            });
+
+            // Populate detailed metrics
+            const metricsContainer = document.getElementById('detailed-metrics');
+            forecastData.detailedMetrics.forEach(metric => {
+                const metricElement = document.createElement('div');
+                metricElement.className = 'metric-card';
+                metricElement.innerHTML = `
+                    <i class="fas ${metric.icon} metric-icon"></i>
+                    <div class="metric-label">${metric.label}</div>
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-trend ${metric.trend}">
+                        ${metric.trend === 'positive' ? '▲' : metric.trend === 'negative' ? '▼' : '●'} ${metric.trend}
+                    </div>
+                `;
+                metricsContainer.appendChild(metricElement);
+            });
+
+            // Initialize forecast charts
+            initForecastCharts();
+            
+            // Forecast controls
+            const controlButtons = document.querySelectorAll('.control-btn');
+            controlButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    controlButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    changeForecastView(this.dataset.view);
+                });
+            });
+
+            // Period selector buttons
+            const periodButtons = document.querySelectorAll('.period-btn');
+            periodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    periodButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    updateForecastData(this.dataset.period);
+                });
+            });
+
+            // Chart type buttons
+            const chartButtons = document.querySelectorAll('[data-chart]');
+            chartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    chartButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    updateChartType(this.dataset.chart);
+                });
+            });
+
+            // Action buttons
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    if (action) {
+                        handleAction(action);
+                    } else {
+                        const buttonText = this.textContent.trim();
+                        handleButtonAction(buttonText);
+                    }
+                });
+            });
+
+            // Sidebar navigation
+            const sidebarLinks = document.querySelectorAll('.sidebar-nav li');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const pageName = this.textContent.trim();
+                    navigateToPage(pageName);
+                });
+            });
+
+            // Location selector
+            const locationSelect = document.getElementById('location-select');
+            locationSelect.addEventListener('change', function() {
+                updateLocationData(this.value);
+            });
+
+            // Upgrade button
+            const upgradeButton = document.querySelector('.upgrade-card button');
+            upgradeButton.addEventListener('click', () => {
+                alert('Upgrade to MetroWeather Pro for advanced forecast features!');
+            });
+        });
+
+        // Navigate to page
+        function navigateToPage(pageName) {
+            const pageRoutes = {
+                'Dashboard': 'index.html',
+                'Weather Maps': 'maps.html',
+                'Forecast': 'forecast.html',
+                'Analytics': 'analytics.html',
+                'Historical Data': 'historical.html',
+                'Alerts': 'alerts.html',
+                'Settings': 'settings.html'
+            };
+            
+            if (pageRoutes[pageName]) {
+                if (pageName === "Forecast") {
+                    // We're already here, just update active state
+                    const sidebarLinks = document.querySelectorAll('.sidebar-nav li');
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    event.target.classList.add('active');
+                } else {
+                    window.location.href = pageRoutes[pageName];
+                }
+            }
+        }
+
+        // Change forecast view
+        function changeForecastView(view) {
+            console.log(`Switching to ${view} view`);
+            // In a real app, this would show/hide different sections
+            showActionFeedback(`Switched to ${view} view`);
+        }
+
+        // Update forecast data based on selected period
+        function updateForecastData(period) {
+            console.log(`Loading ${period} forecast data...`);
+            // In a real app, this would fetch new data from API
+            // For demo, we'll just show a message
+            const messages = {
+                '24h': 'Loading 24-hour detailed forecast...',
+                '48h': 'Loading 48-hour extended forecast...',
+                '7d': 'Loading 7-day forecast...',
+                '10d': 'Loading 10-day forecast...',
+                '14d': 'Loading 14-day extended forecast...'
+            };
+            
+            if (messages[period]) {
+                // Show loading state
+                const hourlyContainer = document.getElementById('hourly-forecast');
+                hourlyContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--color-text-muted);">${messages[period]}</div>`;
+                
+                // Simulate loading delay
+                setTimeout(() => {
+                    location.reload(); // In real app, this would update with new data
+                }, 1000);
+            }
+        }
+
+        // Update chart type
+        function updateChartType(type) {
+            console.log(`Switching to ${type} chart view`);
+            // In a real app, this would update the chart data
+            // For demo, we'll just log the action
+        }
+
+        // Handle action buttons
+        function handleAction(action) {
+            const actions = {
+                'golden-hour': 'Showing golden hour photography times',
+                'blue-hour': 'Showing blue hour photography times'
+            };
+            
+            if (actions[action]) {
+                console.log(actions[action]);
+                // In a real app, this would perform the actual action
+            }
+        }
+
+        // Handle button actions
+        function handleButtonAction(action) {
+            const actions = {
+                'Set Custom Alerts': 'Opening alert settings...',
+                'Share Forecast': 'Sharing forecast...',
+                'Export Data': 'Exporting weather data...',
+                'Compare to History': 'Loading historical comparison...',
+                'Refresh Forecast': 'Refreshing forecast data...',
+                'Set Alert': 'Opening alert settings...'
+            };
+            
+            if (actions[action]) {
+                console.log(actions[action]);
+                showActionFeedback(actions[action]);
+            }
+        }
+
+        // Update location data
+        function updateLocationData(location) {
+            console.log(`Fetching data for ${location}...`);
+            // In a real app, this would fetch new location data from API
+            // For demo, we'll just show a loading state
+            const mainHeader = document.querySelector('.main-header h1');
+            const originalText = mainHeader.textContent;
+            mainHeader.textContent = `Loading ${location} forecast...`;
+            
+            setTimeout(() => {
+                mainHeader.textContent = `Detailed Weather Forecast - ${getLocationName(location)}`;
+                // In real app, we would update all data here
+            }, 1500);
+        }
+
+        // Show action feedback
+        function showActionFeedback(message) {
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--color-primary-blue);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            // Remove after 2 seconds
+            setTimeout(() => {
+                feedback.remove();
+            }, 2000);
+        }
+
+        // Helper function to get location name
+        function getLocationName(locationKey) {
+            const locations = {
+                'new-york': 'New York, NY',
+                'london': 'London, UK',
+                'tokyo': 'Tokyo, Japan',
+                'sydney': 'Sydney, Australia'
+            };
+            return locations[locationKey] || locationKey;
+        }
+
+        // Initialize forecast charts
+        function initForecastCharts() {
+            // Chart 1: Temperature and Precipitation
+            const tempPrecipCtx = document.getElementById('tempPrecipChart').getContext('2d');
+            const tempPrecipChart = new Chart(tempPrecipCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Today', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed'],
+                    datasets: [
+                        {
+                            label: 'High Temp (°F)',
+                            data: [78, 80, 82, 85, 83, 79, 77],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Low Temp (°F)',
+                            data: [65, 66, 68, 70, 69, 67, 66],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Precip Probability (%)',
+                            data: [20, 10, 5, 5, 15, 30, 60],
+                            borderColor: '#ec4899',
+                            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1',
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(100, 116, 139, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        y1: {
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(100, 116, 139, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f8fafc'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Wind & Pressure
+            const windPressureCtx = document.getElementById('windPressureChart').getContext('2d');
+            const windPressureChart = new Chart(windPressureCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Today', 'Fri', 'Sat', 'Sun', 'Mon'],
+                    datasets: [
+                        {
+                            label: 'Wind Speed (mph)',
+                            data: [8, 7, 6, 5, 7],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Wind Gust (mph)',
+                            data: [12, 10, 8, 7, 10],
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Pressure (hPa)',
+                            data: [1013, 1012, 1014, 1015, 1013],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1',
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(100, 116, 139, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        y1: {
+                            position: 'right',
+                            beginAtZero: false,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(100, 116, 139, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f8fafc'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

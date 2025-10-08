@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetroWeather Pro | Weather Maps</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* --- CSS STYLES --- */
+
+        /* Variables and Global Reset */
+        :root {
+            --color-bg-dark: #0f172a;
+            --color-bg-card: rgba(30, 41, 59, 0.85);
+            --color-text-light: #f8fafc;
+            --color-text-muted: #94a3b8;
+            --color-primary-blue: #3b82f6;
+            --color-accent-green: #10b981;
+            --color-accent-yellow: #f59e0b;
+            --color-accent-red: #ef4444;
+            --color-accent-purple: #8b5cf6;
+            --color-accent-cyan: #06b6d4;
+            --color-accent-pink: #ec4899;
+            --color-accent-orange: #f97316;
+            --color-sidebar-active: rgba(30, 41, 59, 0.95);
+            --color-border: rgba(100, 116, 139, 0.4);
+            --border-radius-card: 16px;
+            --sidebar-width: 250px;
+            --blur-amount: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            line-height: 1.6;
+            background-image: url('https://images.unsplash.com/photo-1501630834273-4b5604d2ee31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Background overlay for better readability */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.7) 100%);
+            z-index: -1;
+        }
+
+        /* --- Layout Container --- */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--color-bg-card);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            position: fixed;
+            height: 100%;
+            z-index: 10;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 30px;
+            color: var(--color-primary-blue);
+        }
+
+        .logo i {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .logo h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+            color: var(--color-text-muted);
+            transition: all 0.3s ease;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .sidebar-nav li i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-nav li:hover {
+            color: var(--color-text-light);
+            background-color: rgba(30, 41, 59, 0.6);
+        }
+
+        .sidebar-nav li.active {
+            background-color: var(--color-sidebar-active);
+            color: var(--color-text-light);
+            border-left: 4px solid var(--color-primary-blue);
+            padding-left: 16px;
+        }
+        
+        /* Upgrade Card */
+        .upgrade-card {
+            margin: auto 20px 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border-radius: var(--border-radius-card);
+            text-align: center;
+            color: var(--color-text-light);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--color-border);
+        }
+
+        .upgrade-card i {
+            font-size: 30px;
+            color: var(--color-accent-yellow);
+            margin-bottom: 10px;
+        }
+
+        .upgrade-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-card p {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-bottom: 15px;
+        }
+
+        .upgrade-card button {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .upgrade-card button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            margin-left: var(--sidebar-width);
+        }
+
+        /* --- Header/Navbar --- */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .main-header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        .location-selector {
+            display: flex;
+            align-items: center;
+            background-color: var(--color-bg-card);
+            border-radius: 8px;
+            padding: 5px 15px;
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--color-border);
+        }
+
+        .location-selector i {
+            color: var(--color-primary-blue);
+            margin-right: 8px;
+        }
+
+        .location-selector select {
+            background: transparent;
+            border: none;
+            color: var(--color-text-light);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .location-selector select:focus {
+            outline: none;
+        }
+
+        .search-profile {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .search-box input {
+            background-color: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            padding: 8px 15px 8px 40px;
+            border-radius: 8px;
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+            width: 250px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+        }
+
+        .search-box input::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--color-primary-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+        }
+
+        .profile i {
+            font-size: 1.3rem;
+            color: var(--color-text-muted);
+            margin-right: 20px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .profile i:hover {
+            color: var(--color-primary-blue);
+        }
+
+        .profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--color-primary-blue);
+        }
+
+        /* --- General Card Styling --- */
+        .card {
+            background-color: var(--color-bg-card);
+            border-radius: var(--border-radius-card);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--color-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Map Controls */
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background-color: var(--color-bg-card);
+            padding: 15px;
+            border-radius: var(--border-radius-card);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            border-color: transparent;
+        }
+
+        /* Map Container */
+        .map-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .main-map {
+            height: 500px;
+            border-radius: var(--border-radius-card);
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            position: relative;
+        }
+
+        .map-placeholder {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--color-text-muted);
+            font-size: 1rem;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .map-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--color-primary-blue);
+        }
+
+        .map-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .layer-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .layer-control:hover {
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        .layer-control.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid var(--color-primary-blue);
+        }
+
+        .layer-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .layer-info {
+            flex: 1;
+        }
+
+        .layer-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .layer-desc {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        .layer-toggle {
+            width: 40px;
+            height: 20px;
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .layer-toggle.active {
+            background: var(--color-primary-blue);
+        }
+
+        .layer-toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .layer-toggle.active::after {
+            left: 22px;
+        }
+
+        /* Weather Maps Grid */
+        .maps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mini-map {
+            height: 200px;
+            border-radius: var(--border-radius-card);
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mini-map:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .mini-map-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+        }
+
+        .mini-map-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .mini-map-desc {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        /* Map Legend */
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: var(--border-radius-card);
+            margin-bottom: 30px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-label {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--color-primary-blue) 0%, var(--color-accent-purple) 100%);
+            border-color: transparent;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .map-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .maps-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .logo h2, .sidebar-nav li span, .upgrade-card {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .main-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .search-profile {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .map-controls {
+                flex-direction: column;
+            }
+
+            .control-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-cloud-sun"></i>
+                <h2>MetroWeather</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><i class="fas fa-th-large"></i> Dashboard</li>
+                    <li class="active"><i class="fas fa-map-marked-alt"></i> Weather Maps</li>
+                    <li><i class="fas fa-calendar-alt"></i> Forecast</li>
+                    <li><i class="fas fa-chart-line"></i> Analytics</li>
+                    <li><i class="fas fa-history"></i> Historical Data</li>
+                    <li><i class="fas fa-bell"></i> Alerts</li>
+                    <li><i class="fas fa-cog"></i> Settings</li>
+                </ul>
+            </nav>
+            <div class="upgrade-card">
+                <i class="fas fa-crown"></i>
+                <h3>Upgrade to Pro</h3>
+                <p>Advanced maps & radar data</p>
+                <button>Go Pro</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div>
+                    <h1>Interactive Weather Maps</h1>
+                    <div class="location-selector">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <select id="location-select">
+                            <option value="new-york">New York, NY</option>
+                            <option value="london">London, UK</option>
+                            <option value="tokyo">Tokyo, Japan</option>
+                            <option value="sydney">Sydney, Australia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="search-profile">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search location...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="profile">
+                        <i class="fas fa-bell"></i>
+                        <i class="fas fa-cog"></i>
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" alt="Profile">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Map Controls -->
+            <div class="map-controls card">
+                <button class="control-btn active" data-map="precipitation">
+                    <i class="fas fa-tint"></i>
+                    Precipitation
+                </button>
+                <button class="control-btn" data-map="temperature">
+                    <i class="fas fa-thermometer-half"></i>
+                    Temperature
+                </button>
+                <button class="control-btn" data-map="wind">
+                    <i class="fas fa-wind"></i>
+                    Wind & Pressure
+                </button>
+                <button class="control-btn" data-map="radar">
+                    <i class="fas fa-satellite"></i>
+                    Live Radar
+                </button>
+                <button class="control-btn" data-map="cloud">
+                    <i class="fas fa-cloud"></i>
+                    Cloud Cover
+                </button>
+                <button class="control-btn" data-map="air-quality">
+                    <i class="fas fa-wind"></i>
+                    Air Quality
+                </button>
+            </div>
+
+            <!-- Main Map Container -->
+            <section class="map-container">
+                <div class="main-map card">
+                    <div class="map-placeholder">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h3>Interactive Weather Map</h3>
+                        <p>Real-time precipitation radar with storm tracking</p>
+                        <p class="map-update-time">Last updated: 2 minutes ago</p>
+                        <div class="action-buttons">
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                                Full Screen
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                                Save Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="map-layers card">
+                    <h3 style="margin-bottom: 15px;">Map Layers</h3>
+                    <div class="layer-control active">
+                        <div class="layer-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="layer-info">
+                            <div class="layer-name">Precipitation Radar</div>
+                            <div class="layer-desc">Real-time rain & snow</div>
+                        </div>
+                        <div class="layer-toggle active"></div>
+                    </div>
+                    <div class="layer-control">
+                        <div class="layer-icon">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                        <div class="layer-info">
+                            <div class="layer-name">Temperature</div>
+                            <div class="layer-desc">Heat map overlay</div>
+                        </div>
+                        <div class="layer-toggle"></div>
+                    </div>
+                    <div class="layer-control">
+                        <div class="layer-icon">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <div class="layer-info">
+                            <div class="layer-name">Wind Flow</div>
+                            <div class="layer-desc">Direction & speed</div>
+                        </div>
+                        <div class="layer-toggle"></div>
+                    </div>
+                    <div class="layer-control">
+                        <div class="layer-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="layer-info">
+                            <div class="layer-name">Lightning Strikes</div>
+                            <div class="layer-desc">Real-time detection</div>
+                        </div>
+                        <div class="layer-toggle"></div>
+                    </div>
+                    <div class="layer-control">
+                        <div class="layer-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="layer-info">
+                            <div class="layer-name">Weather Alerts</div>
+                            <div class="layer-desc">Warnings & watches</div>
+                        </div>
+                        <div class="layer-toggle active"></div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="action-btn primary">
+                            <i class="fas fa-layer-group"></i>
+                            Apply Layers
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-sync"></i>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Map Legend -->
+            <section class="card">
+                <h3 style="margin-bottom: 15px;">Precipitation Legend</h3>
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e6f2ff;"></div>
+                        <div class="legend-label">Light Rain (0-2mm/h)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #99ccff;"></div>
+                        <div class="legend-label">Moderate Rain (2-10mm/h)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3399ff;"></div>
+                        <div class="legend-label">Heavy Rain (10-50mm/h)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #0066cc;"></div>
+                        <div class="legend-label">Very Heavy Rain (>50mm/h)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffeb3b;"></div>
+                        <div class="legend-label">Snow</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff9800;"></div>
+                        <div class="legend-label">Freezing Rain</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f44336;"></div>
+                        <div class="legend-label">Severe Storm</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Weather Maps Grid -->
+            <section class="card">
+                <h2 style="margin-bottom: 20px;">Specialized Weather Maps</h2>
+                <div class="maps-grid">
+                    <div class="mini-map card" data-map="temperature">
+                        <div class="mini-map-content">
+                            <div class="mini-map-title">Temperature Map</div>
+                            <div class="mini-map-desc">Current temperatures with heat overlay</div>
+                        </div>
+                    </div>
+                    <div class="mini-map card" data-map="wind">
+                        <div class="mini-map-content">
+                            <div class="mini-map-title">Wind & Pressure</div>
+                            <div class="mini-map-desc">Wind patterns and atmospheric pressure</div>
+                        </div>
+                    </div>
+                    <div class="mini-map card" data-map="satellite">
+                        <div class="mini-map-content">
+                            <div class="mini-map-title">Satellite Imagery</div>
+                            <div class="mini-map-desc">Live satellite cloud coverage</div>
+                        </div>
+                    </div>
+                    <div class="mini-map card" data-map="radar">
+                        <div class="mini-map-content">
+                            <div class="mini-map-title">Live Radar</div>
+                            <div class="mini-map-desc">Real-time precipitation tracking</div>
+                        </div>
+                    </div>
+                    <div class="mini-map card" data-map="air-quality">
+                        <div class="mini-map-content">
+                            <div class="mini-map-title">Air Quality Index</div>
+                            <div class="mini-map-desc">Pollution and air quality levels</div>
+                        </div>
+                    </div>
+                    <div class="mini-map card" data-map="pollen">
+                        <div class="mini-map-content">
+                            <div class="mini-map-title">Pollen & Allergens</div>
+                            <div class="mini-map-desc">Allergen levels and forecasts</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Storm Tracking -->
+            <section class="card">
+                <h2 style="margin-bottom: 20px;">Storm Tracking & Alerts</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="margin-bottom: 10px;">Active Storms</h4>
+                        <div style="background: rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-accent-red);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--color-accent-red);"></i>
+                                <strong>Severe Thunderstorm</strong>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--color-text-muted);">
+                                Moving NE at 25 mph • Expected until 8:30 PM
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 10px;">Weather Alerts</h4>
+                        <div style="background: rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-accent-yellow);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-wind" style="color: var(--color-accent-yellow);"></i>
+                                <strong>Wind Advisory</strong>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--color-text-muted);">
+                                Until 6:00 AM tomorrow • Gusts up to 45 mph
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn">
+                        <i class="fas fa-bell"></i>
+                        Set Storm Alerts
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-share-alt"></i>
+                        Share Map
+                    </button>
+                    <button class="action-btn primary">
+                        <i class="fas fa-download"></i>
+                        Download Data
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Weather Maps Data
+        const mapsData = {
+            currentMap: 'precipitation',
+            layers: {
+                precipitation: { active: true, opacity: 1.0 },
+                temperature: { active: false, opacity: 0.7 },
+                wind: { active: false, opacity: 0.8 },
+                lightning: { active: false, opacity: 1.0 },
+                alerts: { active: true, opacity: 1.0 }
+            },
+            stormData: [
+                {
+                    id: 1,
+                    type: 'thunderstorm',
+                    severity: 'severe',
+                    location: 'Northern New Jersey',
+                    movement: 'NE at 25 mph',
+                    estimatedEnd: '8:30 PM'
+                },
+                {
+                    id: 2,
+                    type: 'wind',
+                    severity: 'advisory',
+                    location: 'Coastal Areas',
+                    movement: 'Stationary',
+                    estimatedEnd: '6:00 AM tomorrow'
+                }
+            ],
+            mapTypes: [
+                { id: 'precipitation', name: 'Precipitation', icon: 'fa-tint', color: '#3b82f6' },
+                { id: 'temperature', name: 'Temperature', icon: 'fa-thermometer-half', color: '#ef4444' },
+                { id: 'wind', name: 'Wind & Pressure', icon: 'fa-wind', color: '#10b981' },
+                { id: 'radar', name: 'Live Radar', icon: 'fa-satellite', color: '#8b5cf6' },
+                { id: 'cloud', name: 'Cloud Cover', icon: 'fa-cloud', color: '#94a3b8' },
+                { id: 'air-quality', name: 'Air Quality', icon: 'fa-wind', color: '#f59e0b' }
+            ]
+        };
+
+        // Initialize the maps page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Map type buttons
+            const mapButtons = document.querySelectorAll('.control-btn');
+            mapButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    mapButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    changeMapType(this.dataset.map);
+                });
+            });
+
+            // Layer toggles
+            const layerToggles = document.querySelectorAll('.layer-toggle');
+            layerToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const layerControl = this.closest('.layer-control');
+                    layerControl.classList.toggle('active');
+                    
+                    // Update layer state
+                    const layerName = layerControl.querySelector('.layer-name').textContent.toLowerCase();
+                    updateLayerState(layerName, this.classList.contains('active'));
+                });
+            });
+
+            // Mini map clicks
+            const miniMaps = document.querySelectorAll('.mini-map');
+            miniMaps.forEach(map => {
+                map.addEventListener('click', function() {
+                    const mapType = this.dataset.map;
+                    changeMapType(mapType);
+                    
+                    // Update active button
+                    mapButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.dataset.map === mapType) {
+                            btn.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Action buttons
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const buttonText = this.textContent.trim();
+                    handleMapAction(buttonText);
+                });
+            });
+
+            // Sidebar navigation
+            const sidebarLinks = document.querySelectorAll('.sidebar-nav li');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const pageName = this.textContent.trim();
+                    navigateToPage(pageName);
+                });
+            });
+
+            // Location selector
+            const locationSelect = document.getElementById('location-select');
+            locationSelect.addEventListener('change', function() {
+                updateMapLocation(this.value);
+            });
+
+            // Upgrade button
+            const upgradeButton = document.querySelector('.upgrade-card button');
+            upgradeButton.addEventListener('click', () => {
+                alert('Upgrade to MetroWeather Pro for advanced radar features and historical map data!');
+            });
+
+            // Initialize map
+            initializeMap();
+        });
+
+        // Change map type
+        function changeMapType(mapType) {
+            console.log(`Switching to ${mapType} map`);
+            mapsData.currentMap = mapType;
+            
+            // Update main map display
+            const mapPlaceholder = document.querySelector('.map-placeholder');
+            const mapTypes = {
+                precipitation: {
+                    icon: 'fa-tint',
+                    title: 'Precipitation Radar',
+                    desc: 'Real-time rain & snow with storm tracking'
+                },
+                temperature: {
+                    icon: 'fa-thermometer-half',
+                    title: 'Temperature Map',
+                    desc: 'Current temperatures with heat overlay'
+                },
+                wind: {
+                    icon: 'fa-wind',
+                    title: 'Wind & Pressure',
+                    desc: 'Wind patterns and atmospheric pressure systems'
+                },
+                radar: {
+                    icon: 'fa-satellite',
+                    title: 'Live Radar',
+                    desc: 'Real-time Doppler radar with precipitation'
+                },
+                cloud: {
+                    icon: 'fa-cloud',
+                    title: 'Cloud Cover',
+                    desc: 'Satellite imagery with cloud analysis'
+                },
+                'air-quality': {
+                    icon: 'fa-wind',
+                    title: 'Air Quality Index',
+                    desc: 'Pollution levels and air quality monitoring'
+                }
+            };
+            
+            if (mapTypes[mapType]) {
+                mapPlaceholder.innerHTML = `
+                    <i class="fas ${mapTypes[mapType].icon}"></i>
+                    <h3>${mapTypes[mapType].title}</h3>
+                    <p>${mapTypes[mapType].desc}</p>
+                    <p class="map-update-time">Last updated: Just now</p>
+                    <div class="action-buttons">
+                        <button class="action-btn">
+                            <i class="fas fa-expand"></i>
+                            Full Screen
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-download"></i>
+                            Save Image
+                        </button>
+                    </div>
+                `;
+                
+                // Re-attach event listeners to new buttons
+                const newActionButtons = mapPlaceholder.querySelectorAll('.action-btn');
+                newActionButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        handleMapAction(this.textContent.trim());
+                    });
+                });
+            }
+        }
+
+        // Update layer state
+        function updateLayerState(layerName, isActive) {
+            // Convert layer name to key
+            const layerKey = layerName.toLowerCase().replace(' ', '-');
+            if (mapsData.layers[layerKey] !== undefined) {
+                mapsData.layers[layerKey].active = isActive;
+                console.log(`${layerName} layer ${isActive ? 'activated' : 'deactivated'}`);
+            }
+        }
+
+        // Handle map actions
+        function handleMapAction(action) {
+            const actions = {
+                'Full Screen': 'Entering full screen mode...',
+                'Save Image': 'Downloading map image...',
+                'Set Storm Alerts': 'Opening alert settings...',
+                'Share Map': 'Sharing current map view...',
+                'Download Data': 'Exporting weather data...',
+                'Apply Layers': 'Updating map layers...',
+                'Reset': 'Resetting map to default view...'
+            };
+            
+            if (actions[action]) {
+                console.log(actions[action]);
+                // Show temporary feedback
+                showActionFeedback(actions[action]);
+            }
+        }
+
+        // Show action feedback
+        function showActionFeedback(message) {
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--color-primary-blue);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            // Remove after 2 seconds
+            setTimeout(() => {
+                feedback.remove();
+            }, 2000);
+        }
+
+        // Update map location
+        function updateMapLocation(location) {
+            console.log(`Loading maps for ${location}`);
+            // In a real app, this would fetch new map data
+            const mainHeader = document.querySelector('.main-header h1');
+            const originalText = mainHeader.textContent;
+            mainHeader.textContent = `Loading ${getLocationName(location)} maps...`;
+            
+            setTimeout(() => {
+                mainHeader.textContent = `Interactive Weather Maps - ${getLocationName(location)}`;
+                // Update map data here in real app
+            }, 1000);
+        }
+
+        // Initialize map
+        function initializeMap() {
+            console.log('Initializing weather maps...');
+            // In a real app, this would initialize the map library (Leaflet, Google Maps, etc.)
+        }
+
+        // Navigate to page
+        function navigateToPage(pageName) {
+            const pageRoutes = {
+                'Dashboard': 'index.html',
+                'Weather Maps': 'maps.html',
+                'Forecast': 'forecast.html',
+                'Analytics': 'analytics.html',
+                'Historical Data': 'historical.html',
+                'Alerts': 'alerts.html',
+                'Settings': 'settings.html'
+            };
+            
+            if (pageRoutes[pageName]) {
+                if (pageName === 'Weather Maps') {
+                    // We're already here, just update active state
+                    const sidebarLinks = document.querySelectorAll('.sidebar-nav li');
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    event.target.classList.add('active');
+                } else {
+                    window.location.href = pageRoutes[pageName];
+                }
+            }
+        }
+
+        // Helper function to get location name
+        function getLocationName(locationKey) {
+            const locations = {
+                'new-york': 'New York, NY',
+                'london': 'London, UK',
+                'tokyo': 'Tokyo, Japan',
+                'sydney': 'Sydney, Australia'
+            };
+            return locations[locationKey] || locationKey;
+        }
+    </script>
+</body>
+</html>
